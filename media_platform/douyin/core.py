@@ -29,7 +29,7 @@ class DouYinCrawler(AbstractCrawler):
     browser_context: BrowserContext
 
     def __init__(self) -> None:
-        self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"  # fixed
+        self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
         self.index_url = "https://www.douyin.com"
 
     def init_config(self, platform: str, login_type: str, crawler_type: str, start_page: int, keyword: str) -> None:
@@ -61,16 +61,16 @@ class DouYinCrawler(AbstractCrawler):
             await self.context_page.goto(self.index_url)
 
             self.dy_client = await self.create_douyin_client(httpx_proxy_format)
-            if not await self.dy_client.pong(browser_context=self.browser_context):
-                login_obj = DouYinLogin(
-                    login_type=self.login_type,
-                    login_phone="", # you phone number
-                    browser_context=self.browser_context,
-                    context_page=self.context_page,
-                    cookie_str=config.COOKIES
-                )
-                await login_obj.begin()
-                await self.dy_client.update_cookies(browser_context=self.browser_context)
+            # if not await self.dy_client.pong(browser_context=self.browser_context):
+            #     login_obj = DouYinLogin(
+            #         login_type=self.login_type,
+            #         login_phone="", # you phone number
+            #         browser_context=self.browser_context,
+            #         context_page=self.context_page,
+            #         cookie_str=config.COOKIES
+            #     )
+            #     await login_obj.begin()
+            #     await self.dy_client.update_cookies(browser_context=self.browser_context)
             crawler_type_var.set(self.crawler_type)
             if self.crawler_type == "search":
                 # Search for notes and retrieve their comment information.
@@ -112,8 +112,9 @@ class DouYinCrawler(AbstractCrawler):
 
                 for post_item in posts_res.get("data"):
                     try:
-                        aweme_info: Dict = post_item.get("aweme_info") or \
-                                           post_item.get("aweme_mix_info", {}).get("mix_items")[0]
+                        if post_item['type'] != 1 or post_item['aweme_info']['aweme_type'] != 0:
+                            continue
+                        aweme_info: Dict = post_item.get("aweme_info")
                     except TypeError:
                         continue
                     aweme_list.append(aweme_info.get("aweme_id", ""))

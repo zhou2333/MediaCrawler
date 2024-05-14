@@ -48,7 +48,8 @@ async def update_douyin_aweme(aweme_item: Dict):
         "share_count": str(interact_info.get("share_count")),
         "ip_location": aweme_item.get("ip_label", ""),
         "last_modify_ts": utils.get_current_timestamp(),
-        "aweme_url": f"https://www.douyin.com/video/{aweme_id}"
+        "aweme_url": f"https://www.douyin.com/video/{aweme_id}",
+        "video_url": str(aweme_item['video']['play_addr']['url_list'][2])
     }
     utils.logger.info(
         f"[store.douyin.update_douyin_aweme] douyin aweme id:{aweme_id}, title:{save_content_item.get('title')}")

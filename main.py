@@ -4,6 +4,7 @@ import sys
 
 import config
 import db
+from typing import Dict, Type
 from base.base_crawler import AbstractCrawler
 from media_platform.bilibili import BilibiliCrawler
 from media_platform.douyin import DouYinCrawler
@@ -13,7 +14,7 @@ from media_platform.xhs import XiaoHongShuCrawler
 
 
 class CrawlerFactory:
-    CRAWLERS = {
+    CRAWLERS: Dict[str, Type['AbstractCrawler']] = {
         "xhs": XiaoHongShuCrawler,
         "dy": DouYinCrawler,
         "ks": KuaishouCrawler,
@@ -23,10 +24,17 @@ class CrawlerFactory:
 
     @staticmethod
     def create_crawler(platform: str) -> AbstractCrawler:
+        supported_platforms = ", ".join(CrawlerFactory.CRAWLERS.keys())
         crawler_class = CrawlerFactory.CRAWLERS.get(platform)
+
         if not crawler_class:
-            raise ValueError("Invalid Media Platform Currently only supported xhs or dy or ks or bili ...")
-        return crawler_class()
+            raise ValueError(f"Invalid Media Platform. Currently only supported {supported_platforms}")
+
+        try:
+            # 尝试实例化爬虫类
+            return crawler_class()
+        except Exception as e:
+            raise RuntimeError(f"Failed to instantiate {crawler_class.__name__}: {str(e)}") from e
 
 
 async def main():
@@ -39,10 +47,10 @@ async def main():
     parser.add_argument('--type', type=str, help='crawler type (search | detail | creator)',
                         choices=["search", "detail", "creator"], default=config.CRAWLER_TYPE)
     parser.add_argument('--start', type=int, help='crawler type (number of start page)',
-                         default=config.START_PAGE)
+                        default=config.START_PAGE)
     parser.add_argument('--keywords', type=str, help='crawler type (please input keywords)',
-                         default=config.KEYWORDS)
-    
+                        default=config.KEYWORDS)
+
     # init db
     if config.SAVE_DATA_OPTION == "db":
         await db.init_db()
@@ -57,7 +65,7 @@ async def main():
         keyword=args.keywords
     )
     await crawler.start()
-    
+
     if config.SAVE_DATA_OPTION == "db":
         await db.close()
 
